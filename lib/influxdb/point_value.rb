@@ -5,7 +5,7 @@ module InfluxDB
 
     def initialize(data)
       @series    = data[:series].gsub(/\s/, '\ ').gsub(',', '\,')
-      @values    = data_to_string(data[:values], true)
+      @values    = data_to_string(data[:values], true, true)
       @tags      = data_to_string(data[:tags])
       @timestamp = data[:timestamp]
     end
@@ -20,16 +20,24 @@ module InfluxDB
 
     private
 
-    def data_to_string(data, quote_escape = false)
+    def data_to_string(data, quote_escape = false, may_have_integers = false)
       return nil unless data && !data.empty?
-      mappings = map(data, quote_escape)
+      mappings = map(data, quote_escape, may_have_integers)
       mappings.join(',')
     end
 
-    def map(data, quote_escape)
+    def map(data, quote_escape, may_have_integers)
       data.map do |k, v|
         key = escape_key(k)
-        val = v.is_a?(String) ? escape_value(v, quote_escape) : v
+
+        if v.is_a?(String)
+          val = escape_value(v, quote_escape)
+        elsif may_have_integers && v.is_a?(Fixnum)
+          val = "#{v}i"
+        else
+          val = v
+        end
+
         "#{key}=#{val}"
       end
     end

@@ -1,6 +1,24 @@
 require "spec_helper"
 
 describe InfluxDB::PointValue do
+  describe "trailing 'i' adding" do
+    it 'should convert an int into a string with a trailing i appended' do
+      expected = 'ints value=42i'
+      point = InfluxDB::PointValue.new(series: "ints", values: { value: 42 })
+      actual = point.dump
+
+      expect(actual).to eq(expected)
+    end
+
+    it 'should not do that to anything else really' do
+      expected = 'floats value=1.1'
+      point = InfluxDB::PointValue.new(series: "floats", values: { value: 4.2 })
+      actual = point.dump
+
+      expect(actual).to eq(expected)
+    end
+  end
+
   describe "whitespace escaping" do
     it 'should escape series name' do
       point = InfluxDB::PointValue.new(series: "Some Long String", values: { value: 5 })
